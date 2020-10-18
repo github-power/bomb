@@ -1,0 +1,105 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #585858;
+}
+
+li {
+    list-style-type: none;
+    display: block;
+}
+
+#root {
+    width: 360px;
+    height: 360px;
+}
+
+#root * {
+    user-select: none;
+}
+
+.rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.columns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.columns>li {
+    width: 36px;
+    height: 36px;
+    background-color: aqua;
+    line-height: 32px;
+    text-align: center;
+}
+
+
+.columns>li {
+    position: relative;
+}
+
+.columns>li {
+    position: relative;
+}
+
+.columns>li::before {
+    top: 0;
+    left: 0;
+    z-index: 9;
+    opacity: 0.8;
+    content: "";
+    background-color: pink;
+    width: 34px;
+    height: 34px;
+    position: absolute;
+    border-radius: 2px;
+    box-shadow: 0 0 3px pink;
+}
+
+.columns>.marked::before {
+    position: absolute;
+    height: 34px;
+    width: 34px;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    content: "";
+    background: url(./img/flag.svg) red no-repeat center;
+    box-shadow: 0 0 3px red;
+    background-size: 70%;
+}
+
+.columns>.safe::before {
+    display: none;
+}
+
+.columns>.boom::before {
+    background: url(./img/bomb-red.png) pink no-repeat center;
+    background-size: 80%;
+}
+
+.columns>.safe::before,
+
+.columns>li.danger::before {
+    display: none;
+}
+/*
+.columns>.boom {
+    display: block;
+    background: pink;
+} */
+
+.columns>.danger {
+    color: red;
+}
+
+/* marked */
+/* .columns>.danger::before {
+    display: none;
+} */
