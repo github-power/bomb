@@ -9,15 +9,6 @@ var scannedArea = []
 var win = false
 var lose = false
 
-function youwin() {
-    alert("你赢了")
-    win = true
-    console.warn("win")
-}
-function youLose() {
-    // lose = true
-    console.log("youlose")
-}
 /**
  * 获取DOM元素集合存储到变量areas
  */
@@ -26,45 +17,14 @@ function setAreas() {
     return areas
 }
 /**
- * 扫雷配置
- */
-var config = {
-    bomb_area_width: 10, // 雷区宽度
-    bomb_area_height: 10, // 雷区高度
-    bomb_area: 50,
-    bomb_num: 10,  // 雷数目
-    bomb_arr: [], // 雷位置
-    bomb_map: [],// 雷区地图
-    bomb_char: '*',
-}
-
-/**
  * 数组初始化，填充 0
- * @param {*} length
+ * @param {*} length 数组长度
  */
 function initArr(length) {
     var arr = []
     while (arr.length < length)
         arr.push(0)
     return arr
-}
-/**
- * 生成目标个有效雷区位置
- * 数据来自全局变量config
- * 返回生成的坐标数组
- * @returns 返回生成的雷点
- */
-function setBomb() {
-    var bomb;
-    while (config.bomb_arr.length < config.bomb_num) {
-        // 获取可能的雷坐标
-        bomb = Math.floor(Math.random() * config.bomb_area_width * config.bomb_area_height)
-        // 判断该位置是否被占用，没有被占用则在该位置添加雷
-        if (config.bomb_arr.indexOf(bomb) == -1) {
-            config.bomb_arr.push(bomb)
-        }
-    }
-    return config.bomb_arr
 }
 /**
  * 通过坐标或 坐标号码 生成对象
@@ -87,31 +47,69 @@ function setPoint(num, x, y) {
     return point
 }
 /**
+ * 扫雷配置
+ */
+var config = {
+    bomb_area_width: 10, // 雷区宽度
+    bomb_area_height: 10, // 雷区高度
+    bomb_area: 50,
+    bomb_num: 10,  // 雷数目
+    bomb_arr: [], // 雷位置
+    bomb_map: [],// 雷区地图
+    bomb_char: '*',
+}
+
+/* 生成雷区地图相关***********************************************************/
+
+/**
+ * 生成目标个有效雷区位置
+ * 数据来自全局变量config
+ * 返回生成的坐标数组
+ * @returns 返回生成的雷点
+ */
+function setBomb() {
+    var bomb;
+    while (config.bomb_arr.length < config.bomb_num) {
+        // 获取可能的雷坐标
+        bomb = Math.floor(Math.random() * config.bomb_area_width * config.bomb_area_height)
+        // 判断该位置是否被占用，没有被占用则在该位置添加雷
+        if (config.bomb_arr.indexOf(bomb) == -1) {
+            config.bomb_arr.push(bomb)
+        }
+    }
+    return config.bomb_arr
+}
+/**
  * 设置雷区
  */
 function setMap() {
-    // 生成10个雷
-    // setBomb()
-    var bomb_place;
-    var bomb_x;
-    var bomb_y;
+    // 生成10个雷 // 雷的数量config
+    // config.bomb_num // 雷个数
+    setBomb()
     // 初始化雷区 填充0
     config.bomb_map = initArr(config.bomb_area_width * config.bomb_area_height)
     for (var i = 0; i < config.bomb_num; i++) {
         // 遍历并取出雷的坐标
         var aroundNums = []
         var point
-        bomb_place = config.bomb_arr[i]
-        point = setPoint(bomb_place)
+        point = setPoint(config.bomb_arr[i])
+        // 获取雷的周围坐标
         aroundNums = getAround(point)
         console.log('雷' + i, point, "around ", aroundNums)
-        config.bomb_map[bomb_place] = config.bomb_char
-        aroundNums.forEach(function (value) { if (config.bomb_map[value] != config.bomb_char) config.bomb_map[value] += 1 })
+        // 雷
+        config.bomb_map[point.num] = config.bomb_char
+        // 类的周围
+        aroundNums.forEach(function (value) {
+            if (config.bomb_map[value] != config.bomb_char) { config.bomb_map[value] += 1 }
+        })
     }
+    console.warn("雷区设置完成")
 }
 /**
  * 获取雷区周围的可点击区域
+ *
  * @param {*} point
+ * @returns   数组
  */
 function getAround(point) {
     var aroundNum = []
@@ -157,7 +155,27 @@ function getAround(point) {
     }
     return aroundNum.sort();
 }
+
+/* 点击事件相关***********************************************************/
 /**
+ * 获得胜利
+ */
+function youwin() {
+    alert("你赢了")
+    // 修改标记变量
+    win = true
+    console.warn("win")
+}
+/**
+ * 扫雷失败
+ */
+function youLose() {
+    // 修改标记变量
+    lose = true
+    console.log("youlose")
+}
+/**
+ * 添加标记
  * 添加类名marked
  * @param {*} e
  */
@@ -168,6 +186,7 @@ function mark(e) {
     }
 }
 /**
+ * 取消标记
  * 去除类名marked
  * @param {*} e
  */
@@ -178,26 +197,45 @@ function unMark(e) {
         markedArea[(markedArea.indexOf(parseInt(e.getAttribute('area'))))] = null
     }
 }
+/**
+ * 引爆地雷
+ * 扫雷失败
+ * @param {*} e
+ */
 function boom(e) {
+    // 修改标记变量
     lose = true
     e.classList.add("boom")
     config.bomb_arr.forEach(function (item) {
         areas[item].classList.add('boom')
     })
 }
-
+/**
+ * 周围有雷 危险
+ * @param {object} e
+ */
 function areaDanger(e) {
     e.innerText = config.bomb_map[parseInt(e.getAttribute("area"))]
     e.classList.add("danger")
     dangerArea.push(parseInt(e.getAttribute("area")))
 }
+
+/**
+ * 周围无雷 安全
+ * @param {*} e
+ */
 function areaSafe(e) {
     e.innerText = ''
     e.classList.add("safe")
     safeArea.push(parseInt(e.getAttribute("area")))
 }
-function aroundStatus(e) {
-    var point = setPoint(parseInt(e.getAttribute('area')))
+
+/**
+ * 实现点击到安全区，自动向周围探索
+ * @param {*} element 被点击的DOM节点 - li
+ */
+function aroundStatus(element) {
+    var point = setPoint(parseInt(element.getAttribute('area')))
     around = getAround(point)
     around.forEach(function (item) {
         //没有被探索过的
@@ -224,16 +262,23 @@ function aroundStatus(e) {
         }
     })
 }
+/**
+ * 判断是否搜出所有雷区
+ */
+function isWin() {
+    console.log("------------------------iswin")
+    if (safeArea.length + dangerArea.length == config.bomb_area_width * config.bomb_area_height - config.bomb_num) {
+        youwin()
+    }
+}
 function clickAction(BTN, DOM) {
     // console.clear()
     var mouseLeftCode = 0;
     var mouseCenterCode = 1
     var mouseRightCode = 2
     var area = {}
-
     if (win) {
         console.clear()
-
         console.log("win")
         return
     }
@@ -242,9 +287,9 @@ function clickAction(BTN, DOM) {
         console.log("lose")
         return
     }
-
     area.num = parseInt(DOM.getAttribute("area"))
     area.status = {}
+
     area.config = {}
     area.status.safe = DOM.classList.contains("safe")
     area.status.marked = DOM.classList.contains("marked")
@@ -316,18 +361,6 @@ function clickAction(BTN, DOM) {
     console.log("area      ", area)
     // console.warn(safeArea)
 }
-
-function isWin() {
-    console.log("------------------------iswin")
-    console.log(safeArea.length + dangerArea.length)
-    console.log(config.bomb_area_width * config.bomb_area_height - config.bomb_num)
-    if (safeArea.length + dangerArea.length == config.bomb_area_width * config.bomb_area_height - config.bomb_num) {
-        youwin()
-    }
-}
-function isBomb() {
-
-}
 /**
  * 鼠标点击控制
  *
@@ -346,14 +379,10 @@ function mouseClick() {
         console.error(win, lose)
         // console.clear()
         console.warn("dianjishijian", e)
-        // var status = getStatus(e.composedPath()[0])
         var area = e.composedPath()[0].getAttribute("area")
         var point = setPoint(area)
         var around = getAround(point)
         clickAction(e.button, e.composedPath()[0])
-        // isWin()
-        isBomb()
-        //   setTimeout(isWin(),2)
         setTimeout(function () {
             // 这里就是处理的事件
             isWin()
@@ -361,7 +390,6 @@ function mouseClick() {
         console.log(point, around)
     }
 }
-
 /**
  * 生成DOM 节点
  * 前置条件，定义root节点，生成的节点都挂载于root 节点
@@ -369,32 +397,30 @@ function mouseClick() {
  * @param j asd
  */
 function createMapElement() {
+    // 地图结构
+    // ul#root.rows>li.row>ul.columns>li.column
 
+    // 雷区的宽高
     var width = config.bomb_area_width;
     var height = config.bomb_area_height;
+
     var i = 0;
     var rli;
     var cul;
     var cli;
     var j = 0;
     var text;
-
+    setAreas()
     while (i < height) {
-
         console.log("生成第", i + 1, "行")
-
         rli = document.createElement("li")
-
         rli.className = "row";
         cul = document.createElement("ul")
-
         cul.className = "columns"
         j = 0
         while (j < width) {
             cli = document.createElement("li");
-
             cli.className = "column"
-
             text = document.createTextNode(i * width + j)
             cli.setAttribute('area', (i * width + j))
             // @test cli.setAttribute('onclick', "console.log(this.getAttribute('area'))")
@@ -413,29 +439,11 @@ function createMapElement() {
 }
 window.onload = function () {
     root = document.getElementById("root");
-    mouseClick()
-
-    createMapElement()
-    setBomb()
+    // 生成地图
     setMap()
     // console.clear()
-    setAreas()
-}
-/**
- * 获取随机数组，开始结束 数目 可指定
- * 不保证数据唯一
- * @param {*} start
- * @param {*} end
- * @param {*} count
- */
-function getRandArray(start = 0, end = 10, count = 5) {
-    start = parseInt(start);
-    end = parseInt(end);
-    count = parseInt(count);
-    numWidth = end - start;
-    numArr = [];
-    for (i = 0; i < count; i++) {
-        numArr[i] = Math.floor(Math.random() * numWidth)
-    }
-    return numArr;
+    // 生成DOM
+    createMapElement()
+    // 点击事件
+    mouseClick()
 }
