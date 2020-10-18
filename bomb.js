@@ -9,6 +9,27 @@ var scannedArea = []
 var win = false
 var lose = false
 
+function init() {
+    areas = null
+    markedArea = []
+    areas = null
+    markedArea = []
+    safeArea = []
+    dangerArea = []
+    scannedArea = []
+    win = false
+    lose = false
+    config = {
+        bomb_area_width: 10, // 雷区宽度
+        bomb_area_height: 10, // 雷区高度
+        bomb_area: 50,
+        bomb_num: 10,  // 雷数目
+        bomb_arr: [], // 雷位置
+        bomb_map: [],// 雷区地图
+        bomb_char: '*',
+    }
+}
+
 /**
  * 获取DOM元素集合存储到变量areas
  */
@@ -111,51 +132,57 @@ function setMap() {
  * @param {*} point
  * @returns   数组
  */
+//  x width
+//  y height
+
+
+/*
+up   x > 0
+
+down x < height -1
+left up x > 0 y > 0
+right up x > 0 y < wdhth - 1
+
+left y > 0
+right y < width -1
+
+ */
+
 function getAround(point) {
     var aroundNum = []
+    // top
     if (point.x > 0) {
-        // up
         aroundNum.push(point.num - config.bomb_area_width)
+        // left
         if (point.y > 0) {
-            // left
-            if (aroundNum.indexOf(point.num - 1) == -1) {
-                aroundNum.push(point.num - 1)
-            }
-            // up_left
             aroundNum.push(point.num - config.bomb_area_width - 1)
         }
-        if (point.y < config.bomb_area_height - 1) {
-            // right
-            if (aroundNum.indexOf(point.num + 1) == -1) {
-                aroundNum.push(point.num + 1)
-            }
-            // up_right
+        // right
+        if (point.y < config.bomb_area_width -1) {
             aroundNum.push(point.num - config.bomb_area_width + 1)
         }
     }
-    if (point.x < config.bomb_area_width - 1) {
-        // down
+    // bottom
+    if (point.x < config.bomb_area_height - 1) {
         aroundNum.push(point.num + config.bomb_area_width)
+        // left
         if (point.y > 0) {
-            // left
-            if (aroundNum.indexOf(point.num - 1) == -1) {
-                aroundNum.push(point.num - 1)
-            }
-            // down_left
             aroundNum.push(point.num + config.bomb_area_width - 1)
-        }
-        if (point.y < config.bomb_area_height - 1) {
-            // right
-            if (aroundNum.indexOf(point.num + 1) == -1) {
-                aroundNum.push(point.num + 1)
-            }
-            // down_right
+        }// right
+        if (point.y < config.bomb_area_width -1) {
             aroundNum.push(point.num + config.bomb_area_width + 1)
         }
     }
+    // left
+    if (point.y > 0) {
+        aroundNum.push(point.num - 1)
+    }
+    // right
+    if (point.y < config.bomb_area_width -1 ) {
+        aroundNum.push(point.num + 1)
+    }
     return aroundNum.sort();
 }
-
 /* 点击事件相关***********************************************************/
 /**
  * 获得胜利
@@ -172,6 +199,7 @@ function youwin() {
 function youLose() {
     // 修改标记变量
     lose = true
+    alert("您引爆了地雷")
     console.log("youlose")
 }
 /**
@@ -236,6 +264,7 @@ function areaSafe(e) {
  */
 function aroundStatus(element) {
     var point = setPoint(parseInt(element.getAttribute('area')))
+
     around = getAround(point)
     around.forEach(function (item) {
         //没有被探索过的
@@ -266,7 +295,7 @@ function aroundStatus(element) {
  * 判断是否搜出所有雷区
  */
 function isWin() {
-    console.log("------------------------iswin")
+    console.log("iswin")
     if (safeArea.length + dangerArea.length == config.bomb_area_width * config.bomb_area_height - config.bomb_num) {
         youwin()
     }
@@ -278,12 +307,12 @@ function clickAction(BTN, DOM) {
     var mouseRightCode = 2
     var area = {}
     if (win) {
-        console.clear()
+        // console.clear()
         console.log("win")
         return
     }
     if (lose) {
-        console.clear()
+        // console.clear()
         console.log("lose")
         return
     }
@@ -314,7 +343,15 @@ function clickAction(BTN, DOM) {
                 }
                 case config.bomb_char: {
                     boom(DOM)
-                    youLose()
+
+
+                    setTimeout(function () {
+                        // 这里就是处理的事件
+                        if (lose) {
+                            youLose()
+                        }
+
+                    }, 1000);
                     break
                 }
                 case 1:
@@ -367,25 +404,21 @@ function clickAction(BTN, DOM) {
  */
 function mouseClick() {
     root.oncontextmenu = function () { return false }
+    root.onmousedown = function (e) {
+        console.error(e)
+    }
     root.onmouseup = function (e) {
-        if (win) {
-            console.clear()
-            console.log("youwin")
-        }
-        if (lose) {
-            console.clear()
-            console.log("youlose")
-        }
-        console.error(win, lose)
-        // console.clear()
-        console.warn("dianjishijian", e)
         var area = e.composedPath()[0].getAttribute("area")
         var point = setPoint(area)
         var around = getAround(point)
         clickAction(e.button, e.composedPath()[0])
         setTimeout(function () {
-            // 这里就是处理的事件
             isWin()
+            if (lose) {
+                // console.clear()
+                console.log("youlose")
+                return
+            }
         }, 2000);
         console.log(point, around)
     }
@@ -447,3 +480,60 @@ window.onload = function () {
     // 点击事件
     mouseClick()
 }
+
+function restart() {
+    console.log('------------------', root)
+    config = {
+        bomb_area_width: 10, // 雷区宽度
+        bomb_area_height: 10, // 雷区高度
+        bomb_area: 50,
+        bomb_num: 10,  // 雷数目
+        bomb_arr: [], // 雷位置
+        bomb_map: [],// 雷区地图
+        bomb_char: '*',
+    }
+    var i = 0
+    console.log(root.length)
+    root.innerHTML = ""
+
+
+    areas = null
+    markedArea = []
+    safeArea = []
+    dangerArea = []
+    scannedArea = []
+
+    lose = false
+    win = false
+    setMap()
+    // console.clear()
+    // 生成DOM
+    createMapElement()
+}
+function testCookie() {
+    console.log()
+}
+
+function startMe() {
+    init()
+    config.bomb_num = parseInt(document.getElementsByName("bomb_num")[0].value)
+    config.bomb_area_width = parseInt(document.getElementsByName("bomb_area_width")[0].value)
+    config.bomb_area_height = parseInt(document.getElementsByName("bomb_area_height")[0].value)
+    console.clear()
+    root.innerHTML = []
+    // setBomb()
+    setMap()
+    createMapElement()
+    console.log(config)
+}
+
+function getElementTop(el) {
+    var actualTop = el.offsetTop
+    var current = el.offsetParent
+    while (current !== null) {
+        actualTop += current.offsetTop
+        current = current.offsetParent
+    }
+    return actualTop
+}
+

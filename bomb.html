@@ -14,10 +14,22 @@
 
 <body>
     <div id="App">
+        <h1 class="title">简单扫雷</h1>
+        <p>
+            <ul class="control" id="conrol" style="display: flex; justify-content: center;">
+                <li>
+                    <button class="restart" onclick="restart()">重新开始</button>
+                </li>
+                <li>
+                    <input type="number" name="bomb_num" placeholder="雷数" min="5" max="600" value="10">
+                    <input type="number" name="bomb_area_width" placeholder="宽度" min="5" max="25" value="10">
+                    <input type="number" name="bomb_area_height" placeholder="高度" min="5" max="25" value="10">
+                    <button class="restart" onclick="startMe()">自定义开始</button>
+                </li>
+            </ul>
+        </p>
+        <br>
         <ul class="rows" id="root"></ul>
-        <ul class="control" id="control">
-            <button class="restart" onclick="restart()"></button>
-        </ul>
     </div>
 
 </body>

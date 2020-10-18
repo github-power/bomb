@@ -4,19 +4,29 @@
     box-sizing: border-box;
     background-color: #585858;
 }
-
+.App{
+      /* transform:scale(2); */
+}
 li {
     list-style-type: none;
     display: block;
 }
 
 #root {
-    width: 360px;
-    height: 360px;
+    margin: 0 auto;
+    background-color: aqua;
+    /* transform:scale(1.5); */
 }
 
 #root * {
     user-select: none;
+
+}
+
+
+.title,
+.control {
+    text-align: center;
 }
 
 .rows {
@@ -49,10 +59,10 @@ li {
 }
 
 .columns>li::before {
-    top: 0;
-    left: 0;
+    top: 1px;
+    left: 1px;
     z-index: 9;
-    opacity: 0.8;
+    opacity: 1.8;
     content: "";
     background-color: pink;
     width: 34px;
@@ -66,8 +76,8 @@ li {
     position: absolute;
     height: 34px;
     width: 34px;
-    top: 0;
-    left: 0;
+    top: 1px;
+    left: 1px;
     z-index: 10;
     content: "";
     background: url(./img/flag.svg) red no-repeat center;
@@ -89,6 +99,8 @@ li {
 .columns>li.danger::before {
     display: none;
 }
+
+
 /*
 .columns>.boom {
     display: block;
