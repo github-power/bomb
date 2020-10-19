@@ -533,8 +533,9 @@ function createMapElement() {
         root.appendChild(rli)
         i++
     }
+    root.style.width = 36 * config.bomb_area_width + "px"
     console.log("生成结束")
-    console.log(root)
+    
     return
 }
 /**
@@ -549,6 +550,7 @@ window.onload = function () {
     createMapElement()
     // 点击事件
     mouseClick()
+
     console.clear()
 }
 /**

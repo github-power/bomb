@@ -4,9 +4,11 @@
     box-sizing: border-box;
     background-color: #585858;
 }
-.App{
-      /* transform:scale(2); */
+
+.App {
+    /* transform:scale(2); */
 }
+
 li {
     list-style-type: none;
     display: block;
@@ -20,9 +22,7 @@ li {
 
 #root * {
     user-select: none;
-
 }
-
 
 .title,
 .control {
@@ -48,7 +48,6 @@ li {
     line-height: 32px;
     text-align: center;
 }
-
 
 .columns>li {
     position: relative;
@@ -84,6 +83,7 @@ li {
     box-shadow: 0 0 3px red;
     background-size: 70%;
 }
+
 .columns>.doubt::before {
     position: absolute;
     height: 34px;
@@ -96,6 +96,7 @@ li {
     box-shadow: 0 0 3px red;
     background-size: 70%;
 }
+
 .columns>.safe::before {
     display: none;
 }
@@ -106,23 +107,10 @@ li {
 }
 
 .columns>.safe::before,
-
 .columns>li.danger::before {
     display: none;
 }
 
-
-/*
-.columns>.boom {
-    display: block;
-    background: pink;
-} */
-
 .columns>.danger {
     color: red;
 }
-
-/* marked */
-/* .columns>.danger::before {
-    display: none;
-} */
