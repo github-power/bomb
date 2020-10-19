@@ -495,7 +495,6 @@ function mouseClick() {
         // console.clear()
         // TEST
         console.warn("onmousedown")
-        getMouseStatus("| |-", "|-status-before")
         switch (e.button) {
             case 0: { console.log("|=>", "左键按下"); break; }
             case 1: { console.log("|=>", "中键按下"); break; }
@@ -515,48 +514,36 @@ function mouseClick() {
 
         // 按键占用
         // TODO 如果没有占用正常触发点击事件
-        console.log("|->", "占用鼠标", e.button)
-        getMouseStatus("| |-", "|-status-using")
-        // 标记按键占用
-        mouse_busy = true
-        // 标记按键
-        mouse_busy_button = e.button
 
-        // 标记鼠标按下
-        mouse_down = true
-        // 记录鼠标按下时间
-        mouse_down_time = new Date()
         // 获取DOM 节点
         DOM = e.path[0]
-
-        // getMouseStatus("| |-", "|-status")
-
         // 定时任务
         // NOTE: 适配手机不能右键
         setTimeout(() => {
             if (mouse_down && !mouse_up) {
-                mouse_duration = new Date() - mouse_down_time;
-
                 if (mouse_busy_button == 0) {
                     // TAG 标记已经执行长按操作
                     mouse_keeping = true
-                    mouseLeftKeeping()
+                    return mouseLeftKeeping()
                 }
                 if (mouse_busy_button == 2) {
                     mouse_keeping = true
-                    mouseRightKeeping()
+                    return mouseRightKeeping()
                 }
-
-                // clickAction(e.button, DOM)
-                // WARN  函数跳转
-                console.log("|-mouse_busy_button", mouse_busy_button)
-                console.log("|-setTimeout", new Date - mouse_down_time)
             }
-        }, 510);
+            switch (e.button) {
+                case 0: { console.log("%c|=>", "color:pink", "触发左键长按，左键按下，执行结束"); break; }
+                case 1: { console.log("%c|=>", "color:pink", "触发中键长按，中键按下，执行结束"); break; }
+                case 2: { console.log("%c|=>", "color:pink", "触发右键长按，右键按下，执行结束"); break; }
+            }
 
-        // 鼠标按下后 鼠标状态为按下状态
-        mouse_up = false
-        // mouse_busy = false
+            return
+        }, 510);
+        switch (e.button) {
+            case 0: { console.log("%c|=>", "color:pink", "左键按下执行结束"); break; }
+            case 1: { console.log("%c|=>", "color:pink", "中键按下执行结束"); break; }
+            case 2: { console.log("%c|=>", "color:pink", "右键按下执行结束"); break; }
+        }
         return
     }
     // tag
@@ -576,71 +563,31 @@ function mouseClick() {
             case 2: { console.log("|=>", "右键松开"); break; }
         }
 
-        // TAG 条件1--鼠标长按已经执行
-        if(true)
-        {
-            console.log("%c 鼠标长按已执行，此次mouseup跳过","color:red")
+        // TAG 跳过条件1--鼠标长按已经执行
+        if (true) {
+            console.log("%c 鼠标长按已执行，此次mouseup跳过", "color:red")
             // return
         }
-        // 鼠标占用
-        // 解决鼠标左右键同时处于按下状态
-        // 鼠标占用点击无效
-        // TAG 条件2 按键冲突
-        if(mouse_busy_button == e.button)
-        {
+
+        // TAG 跳过条件2 按键冲突
+        if (mouse_busy_button != e.button) {
             console.log("%c 按键冲突，跳过执行", "color:red")
         }
-        if (mouse_busy && e.button != mouse_busy_button) {
-            getMouseStatus("| |-", "|-status")
-            console.log("|=>", "鼠标占用，点击无效");
-            return
-        }
 
-        if (mouse_duration > 500) {
-            console.log("|=>", "鼠标长按，执行跳过");
-            mouse_up_time  = null
-            mouse_down_time = null
-            mouse_duration = null
-            return
-        }
 
-        // 记录鼠标松开
-        mouse_up = true
 
-        getMouseStatus("| |-", "|-status")
 
-        // 执行 点击操作
-        console.log("|", "clickAction")
-        // clickAction(e.button, e.composedPath()[0])
-        // console.log(point, around)
-        // 改变鼠标状态， 鼠标状态
-        mouse_down = false
-        freeMouse()
         return
     }
     // 对左键有效
     root.onclick = function (e) {
         console.warn("onclick")
-        mouse_busy = false
-        mouse_busy_button = null
         switch (e.button) {
             case 0: { console.log("|=>", "左键点击"); break; }
             case 1: { console.log("|=>", "中键点击"); break; }
             case 2: { console.log("|=>", "右键点击"); break; }
         }
-        getMouseStatus("| |-", "|-status")
-        isWin()
 
-        if (win) {
-            // console.clear()
-            console.log("win")
-            return
-        }
-        if (lose) {
-            // console.clear()
-            console.log("lose")
-            return
-        }
     }
     return
 }
