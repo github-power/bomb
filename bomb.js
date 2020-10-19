@@ -10,9 +10,12 @@ var win = false
 var lose = false
 var mouse_down_time = new Date();
 var mouse_up_time = new Date();
+var mouse_busy = false
+var mouse_busy_button = null
 var mouse_duration
 var mouse_up = false
 var mouse_down = false
+
 var config = {
     bomb_area_width: 10, // 雷区宽度
     bomb_area_height: 10, // 雷区高度
@@ -38,9 +41,14 @@ function getMouseStatus(prefix, data) {
         console.log(prefix, "mouse_up_time  : ", mouse_up_time)
         console.log(prefix, "点击时间", mouse_up_time - mouse_down_time, 'ms')
     }
-
     console.log(prefix, "mouse_up  : ", mouse_up)
     console.log(prefix, "mouse_down  : ", mouse_down)
+    console.log(prefix, "mouse_busy  : ", mouse_busy)
+    console.log(prefix, "mouse_busy_button  : ", mouse_busy_button)
+
+    // console.log(prefix, "mouse_up  : ", mouse_up)
+
+    return
 }
 function init() {
     areas = null
@@ -64,6 +72,7 @@ function init() {
         end_time: null,
         result: null,
     }
+    return
 }
 /**
  * 获取DOM元素集合存储到变量areas
@@ -158,6 +167,7 @@ function setMap() {
         })
     }
     console.warn("雷区设置完成")
+    return
 }
 /**
  * 获取雷区周围的可点击区域
@@ -219,6 +229,7 @@ function youwin() {
     // 修改标记变量
     win = true
     console.warn("win")
+    return
 }
 /**
  * 扫雷失败
@@ -228,6 +239,7 @@ function youLose() {
     lose = true
     alert("您引爆了地雷")
     console.log("youlose")
+    return
 }
 /**
  * 添加标记
@@ -239,6 +251,7 @@ function mark(e) {
     if (markedArea.indexOf(parseInt(e.getAttribute('area'))) == -1) {
         markedArea.push(parseInt(e.getAttribute('area')))
     }
+    return
 }
 /**
  * 取消标记
@@ -251,6 +264,7 @@ function unMark(e) {
         // console.warn(parseInt(e.getAttribute('area')))
         markedArea[(markedArea.indexOf(parseInt(e.getAttribute('area'))))] = null
     }
+    return
 }
 /**
  * 引爆地雷
@@ -264,6 +278,7 @@ function boom(e) {
     config.bomb_arr.forEach(function (item) {
         areas[item].classList.add('boom')
     })
+    return
 }
 /**
  * 周围有雷 危险
@@ -273,6 +288,7 @@ function areaDanger(e) {
     e.innerText = config.bomb_map[parseInt(e.getAttribute("area"))]
     e.classList.add("danger")
     dangerArea.push(parseInt(e.getAttribute("area")))
+    return
 }
 /**
  * 周围无雷 安全
@@ -282,6 +298,7 @@ function areaSafe(e) {
     e.innerText = ''
     e.classList.add("safe")
     safeArea.push(parseInt(e.getAttribute("area")))
+    return
 }
 /**
  * 实现点击到安全区，自动向周围探索
@@ -309,11 +326,13 @@ function aroundStatus(element) {
                 }
             }
         }
+
         if (safeArea.indexOf(item) >= 0 || dangerArea.indexOf(item) >= 0 || markedArea.indexOf(item) >= 0) {
             // areaDanger(areas[item])
             //    continue
         }
     })
+    return
 }
 /**
  * 判断是否搜出所有雷区
@@ -323,6 +342,7 @@ function isWin() {
     if (safeArea.length + dangerArea.length == config.bomb_area_width * config.bomb_area_height - config.bomb_num) {
         youwin()
     }
+    return
 }
 function remove(DOM) {
     var area = {}
@@ -333,7 +353,7 @@ function remove(DOM) {
     area.status.marked = DOM.classList.contains("marked")
     area.status.danger = DOM.classList.contains("danger")
     area.config.status = config.bomb_map[area.num]
-    console.warn(area.config.status)
+    console.log(area.config.status)
     area.status.hidden = area.status.mark || area.status.safe || area.status.danger
     // console.log('--clickAction--left')
     if (safeArea.indexOf(area.num) == -1 && dangerArea.indexOf(area.num) == -1 && markedArea.indexOf(area.num) == -1) {
@@ -376,6 +396,7 @@ function remove(DOM) {
     else {
         console.warn("左键点击失效")
     }
+    return
 }
 function sign(DOM) {
     var area = {}
@@ -403,6 +424,7 @@ function sign(DOM) {
     else {
         console.warn("右键点击失效")
     }
+    return
 }
 function clickAction(BTN, DOM) {
     // console.clear()
@@ -412,7 +434,6 @@ function clickAction(BTN, DOM) {
     var area = {}
     if (mouse_duration > 500) {
         sign(DOM)
-        mouse_duration = 0
         return
     }
     area.num = parseInt(DOM.getAttribute("area"))
@@ -422,7 +443,7 @@ function clickAction(BTN, DOM) {
     area.status.marked = DOM.classList.contains("marked")
     area.status.danger = DOM.classList.contains("danger")
     area.config.status = config.bomb_map[area.num]
-    console.warn(area.config.status)
+    console.log(area.config.status)
     area.status.hidden = area.status.mark || area.status.safe || area.status.danger
     area.around = getAround(DOM)
     mouse_duration = mouse_up_time - mouse_down_time
@@ -445,6 +466,12 @@ function clickAction(BTN, DOM) {
     }
     console.log("area      ", area)
     // console.warn(safeArea)
+    return
+}
+function freeMouse() {
+    mouse_busy = false
+    mouse_busy_button = null
+    console.log("|->", "释放鼠标")
 }
 /**
  * 鼠标点击控制
@@ -453,46 +480,44 @@ function clickAction(BTN, DOM) {
 function mouseClick() {
     root.oncontextmenu = function () { return false }
     root.onmousedown = function (e) {
+        console.clear()
+        console.warn("onmousedown")
+        switch (e.button) {
+            case 0: { console.log("|=>", "左键按下"); break; }
+            case 1: { console.log("|=>", "中键按下"); break; }
+            case 2: { console.log("|=>", "右键按下"); break; }
+        }
 
+        // 鼠标占用
+
+        // 解决鼠标左右键同时处于按下状态
+        // 鼠标占，点击无效
+        if (mouse_busy) {
+            getMouseStatus("| |-", "|-status")
+            console.log("|=>", "鼠标占用，点击无效");
+            return
+        }
+        mouse_busy = true
+        mouse_busy_button = e.button
+
+        console.log("|->", "占用鼠标", e.button)
+        getMouseStatus("| |-", "|-status")
         // 标记鼠标按下
         mouse_down = true
         // 记录鼠标按下时间
         mouse_down_time = new Date()
         // 获取DOM 节点
         DOM = e.path[0]
-        console.clear()
-        // 判断时候胜利或失败
-        // if (win) {
-        //     // console.clear()
-        //     console.log("win")
-        //     return
-        // }
-        // if (lose) {
-        //     // console.clear()
-        //     console.log("lose")
-        //     return
-        // }
-        console.warn("onmousedown")
+        // console.clear()
+
+
+
         // console.log()
         getMouseStatus("| |-", "|-status")
 
         // 定时任务
         // TODO适配手机不能右键
         setTimeout(() => {
-
-            // if (mouse_down) {
-            //     console.clear()
-            //     // console.log()
-            //     time = new Date
-            //     console.log(mouse_down_time, time)
-            //     console.warn("settimeout")
-            //     console.log(e)
-            //     clickAction(e.button, e.path[0])
-            // }
-            // else {
-            //     console.clear()
-            //     console.warn("settimeout--晚了")
-            // }
             if (mouse_down && !mouse_up) {
                 mouse_duration = new Date() - mouse_down_time;
                 clickAction(e.button, DOM)
@@ -500,28 +525,61 @@ function mouseClick() {
             }
 
         }, 510);
-        // console.clear()
-        // console.log(e.path[0])
+
         // 鼠标按下后 鼠标状态为按下状态
         mouse_up = false
+        // mouse_busy = false
+        return
     }
 
     root.onmouseup = function (e) {
+        console.warn("onmouseup")
+        switch (e.button) {
+            case 0: { console.log("|=>", "左键松开"); break; }
+            case 1: { console.log("|=>", "中键松开"); break; }
+            case 2: { console.log("|=>", "右键松开"); break; }
+        }
+
+        // 鼠标占用
+        // 解决鼠标左右键同时处于按下状态
+        // 鼠标占用点击无效
+        if (mouse_busy && e.button != mouse_busy_button) {
+            getMouseStatus("| |-", "|-status")
+            console.log("|=>", "鼠标占用，点击无效");
+            return
+        }
+
         // 记录鼠标松开
         mouse_up = true
-        // 记录鼠标松开时间
-        mouse_up_time = new Date()
 
-        console.warn("onmouseup")
         getMouseStatus("| |-", "|-status")
-
-
-
-        // var area = e.composedPath()[0].getAttribute("area")
-        // var point = setPoint(area)
-        // var around = getAround(point)
-
-
+        // if (mouse_duration > 500) {
+        //     console.log("|-", "mouse_duration > 500")
+        //     mouse_duration = 0
+        //     mouse_down = false
+        //     return
+        // }
+        // 执行 点击操作
+        console.log("|", "clickAction")
+        clickAction(e.button, e.composedPath()[0])
+        // console.log(point, around)
+        // 改变鼠标状态， 鼠标状态
+        mouse_down = false
+        freeMouse()
+        return
+    }
+    // 对左键有效
+    root.onclick = function (e) {
+        console.warn("onclick")
+        mouse_busy = false
+        mouse_busy_button = null
+        switch (e.button) {
+            case 0: { console.log("|=>", "左键点击"); break; }
+            case 1: { console.log("|=>", "中键点击"); break; }
+            case 2: { console.log("|=>", "右键点击"); break; }
+        }
+        getMouseStatus("| |-", "|-status")
+        isWin()
 
         if (win) {
             // console.clear()
@@ -533,20 +591,8 @@ function mouseClick() {
             console.log("lose")
             return
         }
-
-        // 执行 点击操作
-        console.log("|", "clickAction")
-        clickAction(e.button, e.composedPath()[0])
-
-        // console.log(point, around)
-        // 改变鼠标状态， 鼠标状态
-
-        mouse_down = false
     }
-    root.onclick = function (e) {
-        console.warn("onclick")
-        getMouseStatus("| |-", "|-status")
-    }
+    return
 }
 /**
  * 生成DOM 节点
@@ -592,6 +638,7 @@ function createMapElement() {
     }
     console.log("生成结束")
     console.log(root)
+    return
 }
 window.onload = function () {
     root = document.getElementById("root");
@@ -628,6 +675,7 @@ function restart() {
     // console.clear()
     // 生成DOM
     createMapElement()
+    return
 }
 function testCookie() {
     console.log()
@@ -643,6 +691,7 @@ function startMe() {
     setMap()
     createMapElement()
     console.log(config)
+    return
 }
 function getElementTop(el) {
     var actualTop = el.offsetTop
