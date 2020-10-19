@@ -276,7 +276,7 @@ function explore(element) {
 
 function exploreAround(elementNum) {
     elementAround = getAround(setPoint(elementNum))
-    console.log(elementAround)
+    // console.log(elementAround)
     elementAround.forEach(function (item) {
         if (safeArea.indexOf(item) !== -1 || dangerArea.indexOf(item) !== -1) {
             return
@@ -293,7 +293,7 @@ function exploreAround(elementNum) {
 
 function mark(element) {
     console.log("mark")
-    console.log(element)
+    // console.log(element)
     // TAG 逻辑 "marked" "doubt" "" 三者循环
     // 确定 不确定 未知
     // TAG 如果当前标记为 marked 则修改为doubt
@@ -345,10 +345,10 @@ function mouseClick() {
         // TODO 判断全局按键码
         // TODO 若null 继续执行，
         // WARN 否则忽略
-        console.log("before 判断全局按键码 ")
-        console.log(mouse_down)
-        console.log("mouseOn", mouseOn)
-        console.log("mouseCode", mouseCode)
+        // console.log("before 判断全局按键码 ")
+        // console.log(mouse_down)
+        // console.log("mouseOn", mouseOn)
+        // console.log("mouseCode", mouseCode)
         // TAG 拦截执行
         //
         if (mouseOn === true && mouseCode !== null && mouseCode !== mouse_down.code) {
@@ -371,10 +371,12 @@ function mouseClick() {
                 if (mouse_down.code === 0) {
                     console.log("|-mouseLeftKeeping", "左键持续按压触发")
                     mark(e.path[0])
+                    // return
                 }
                 if (mouse_down.code === 2) {
                     console.log("|-mouseLeftKeeping", "右键持续按压触发")
                     // doubt(e.path[0])
+                    // return
                 }
                 console.log(time - mouse_down.time)
                 console.log("长按触发")
@@ -394,26 +396,7 @@ function mouseClick() {
         // TAG 判断按键码
         // TAG 左键执行安全判定
         // TAG 右键执行标记判定
-        if (mouse_down.code == 0) {
-            console.log("lefton")
-            if (e.path[0].classList.contains("marked")) {
-                console.log("被标记 marked")
-                console.warn("点击失效")
-            }
-            if (e.path[0].classList.contains("doubt")) {
-                console.log("被标记 doubt ")
-                console.warn("点击失效")
-            }
-            explore(e.path[0])
-            console.log(e.path[0])
-            return
-        }
-        if (mouse_down.code == 2) {
-            console.log("righton")
-            mark(e.path[0])
-            console.log(e.path[0])
-            return
-        }
+
         switch (e.button) {
             case 0: {
                 console.log("%c|=>", "color:pink", "触发左键长按，左键按下，执行结束");
@@ -453,6 +436,31 @@ function mouseClick() {
             // TAG 记录鼠标释放时间
             time: new Date()
         }
+
+        if(mouse_up.time - mouse_down.time  < 1000)
+        {
+            if (mouse_down.code == 0) {
+                console.log("lefton")
+                if (e.path[0].classList.contains("marked")) {
+                    console.log("被标记 marked")
+                    console.warn("点击失效")
+                }
+                if (e.path[0].classList.contains("doubt")) {
+                    console.log("被标记 doubt ")
+                    console.warn("点击失效")
+                }
+                explore(e.path[0])
+                console.log(e.path[0])
+                return
+            }
+            if (mouse_down.code == 2) {
+                console.log("righton")
+                mark(e.path[0])
+                console.log(e.path[0])
+                return
+            }
+        }
+
         // if (e.path[0].classList.contains("safe") || e.path[0].classList.contains("danger")) {
         // return console.log("已经探索过了，点击无效")
         // }
@@ -535,7 +543,7 @@ function createMapElement() {
     }
     root.style.width = 36 * config.bomb_area_width + "px"
     console.log("生成结束")
-    
+
     return
 }
 /**
