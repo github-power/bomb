@@ -6,6 +6,19 @@ var markedArea = []
 var safeArea = []
 var dangerArea = []
 var scannedArea = []
+
+
+var clickTimes = 0
+// TAG 标记按键触发
+var mouseOn = null;
+// TAG 记录当前按键码
+var mouseCode = null
+// TAG 长按是否可触发
+var mouseContains = true
+
+var mouse_down = {}
+var mouse_up = {}
+
 // TAG 用于游戏状态判断
 var win = false
 var lose = false
@@ -15,7 +28,6 @@ var mouse_up_time = new Date();
 var mouse_duration = null
 // TAG 是否执行触发长按动作
 var mouse_keeping = false
-
 // TAG 用于解决鼠标按键冲突
 var mouse_busy = false
 var mouse_busy_button = null
@@ -34,17 +46,13 @@ var config = {
     end_time: null,
     result: null,
 }
-
 function mouseLeftKeeping() {
     console.log("|-mouseLeftKeeping", "左键持续按压触发")
 } function mouseRightKeeping() {
     console.log("|-mouseLeftKeeping", "右键持续按压触发")
 }
 function getMouseStatus(prefix, data) {
-
     console.log(data)
-
-
     // console.log(prefix, "mouse_duration  : ", mouse_duration)
     if (mouse_up_time - mouse_down_time <= 0) {
         console.log(prefix, "mouse_down_time  : ", mouse_down_time)
@@ -57,9 +65,7 @@ function getMouseStatus(prefix, data) {
     console.log(prefix, "mouse_down  : ", mouse_down)
     console.log(prefix, "mouse_busy  : ", mouse_busy)
     console.log(prefix, "mouse_busy_button  : ", mouse_busy_button)
-
     // console.log(prefix, "mouse_up  : ", mouse_up)
-
     return
 }
 function init() {
@@ -258,13 +264,13 @@ function youLose() {
  * 添加类名marked
  * @param {*} e
  */
-function mark(e) {
-    e.classList.add('marked')
-    if (markedArea.indexOf(parseInt(e.getAttribute('area'))) == -1) {
-        markedArea.push(parseInt(e.getAttribute('area')))
-    }
-    return
-}
+// function mark(e) {
+//     e.classList.add('marked')
+//     if (markedArea.indexOf(parseInt(e.getAttribute('area'))) == -1) {
+//         markedArea.push(parseInt(e.getAttribute('area')))
+//     }
+//     return
+// }
 /**
  * 取消标记
  * 去除类名marked
@@ -283,10 +289,11 @@ function unMark(e) {
  * 扫雷失败
  * @param {*} e
  */
-function boom(e) {
+function boom(element) {
     // 修改标记变量
     lose = true
-    e.classList.add("boom")
+    element.classList.add("boom")
+    // TAG 连锁爆炸，遍历爆炸
     config.bomb_arr.forEach(function (item) {
         areas[item].classList.add('boom')
     })
@@ -296,20 +303,23 @@ function boom(e) {
  * 周围有雷 危险
  * @param {object} e
  */
-function areaDanger(e) {
-    e.innerText = config.bomb_map[parseInt(e.getAttribute("area"))]
-    e.classList.add("danger")
-    dangerArea.push(parseInt(e.getAttribute("area")))
+function areaDanger(element) {
+
+    element.innerText = config.bomb_map[parseInt(element.getAttribute("area"))]
+    element.classList.add("danger")
+    // TAG 添加该点到危险数组
+    dangerArea.push(parseInt(element.getAttribute("area")))
     return
 }
 /**
  * 周围无雷 安全
  * @param {*} e
  */
-function areaSafe(e) {
-    e.innerText = ''
-    e.classList.add("safe")
-    safeArea.push(parseInt(e.getAttribute("area")))
+function areaSafe(element) {
+    element.innerText = ''
+    element.classList.add("safe")
+    // TAG 天加该点到 安全数组
+    safeArea.push(parseInt(element.getAttribute("area")))
     return
 }
 /**
@@ -464,7 +474,6 @@ function clickAction(BTN, DOM) {
     console.log(area.config.status)
     area.status.hidden = area.status.mark || area.status.safe || area.status.danger
     area.around = getAround(DOM)
-
     if (BTN == mouseLeftCode) {
         // console.clear()
         remove(DOM)
@@ -473,7 +482,6 @@ function clickAction(BTN, DOM) {
         sign(DOM)
     }
     if (BTN == mouseCenterCode) {
-
     }
     mouse_duration = null
     console.log("area      ", area)
@@ -485,6 +493,175 @@ function freeMouse() {
     console.log("|->", "释放鼠标")
     getMouseStatus("| |-", "|-free")
 }
+function tempMousedownTop(e) {
+    console.warn("onmousedown")
+    switch (e.button) {
+        case 0: { console.log("==>", "左键按下"); break; }
+        case 1: { console.log("==>", "中键按下"); break; }
+        case 2: { console.log("==>", "右键按下"); break; }
+    }
+    console.log("| \\ \n|  |\-", "e.button", e.button)
+}
+function tempMousedownSetTime() {
+    setTimeout(() => {
+        if (mouse_down && !mouse_up) {
+            if (mouse_busy_button == 0) {
+                // TAG 标记已经执行长按操作
+                mouse_keeping = true
+                return mouseLeftKeeping()
+            }
+            if (mouse_busy_button == 2) {
+                mouse_keeping = true
+                return mouseRightKeeping()
+            }
+        }
+        switch (e.button) {
+            case 0: { console.log("%c|=>", "color:pink", "触发左键长按，左键按下，执行结束"); break; }
+            case 1: { console.log("%c|=>", "color:pink", "触发中键长按，中键按下，执行结束"); break; }
+            case 2: { console.log("%c|=>", "color:pink", "触发右键长按，右键按下，执行结束"); break; }
+        }
+        return
+    }, 510);
+}
+function tempMousedownBottom(e) {
+    switch (e.button) {
+        case 0: { console.log("%c|=>", "color:pink", "左键按下执行结束"); break; }
+        case 1: { console.log("%c|=>", "color:pink", "中键按下执行结束"); break; }
+        case 2: { console.log("%c|=>", "color:pink", "右键按下执行结束"); break; }
+    }
+}
+function tempMouseupTop(e) {
+    console.warn("onmouseup")
+    switch (e.button) {
+        case 0: { console.log("|=>", "左键松开"); break; }
+        case 1: { console.log("|=>", "中键松开"); break; }
+        case 2: { console.log("|=>", "右键松开"); break; }
+    }
+    console.log(e.button)
+}
+function tempMouseupBottom(e) {
+    switch (e.button) {
+        case 0: { console.log("%c|=>", "color:pink", "左键松开执行结束"); break; }
+        case 1: { console.log("%c|=>", "color:pink", "中键松开执行结束"); break; }
+        case 2: { console.log("%c|=>", "color:pink", "右键松开执行结束"); break; }
+    }
+}
+
+function explode(element) {
+
+    element.classList.add("boom")
+    lose = true
+
+}
+function hasWin() {
+    if (safeArea.length + dangerArea.length + config.bomb_arr.length === config.bomb_area_width * config.bomb_area_height) {
+        win = true
+        console.log("%cWin","color:pink")
+
+    }
+    if(lose)
+    {
+        console.error("lose")
+    }
+    return win
+}
+function explodeAll() {
+    // config.bombarr
+    config.bomb_arr.forEach(function (item) {
+        areas[item].classList.add("boom")
+    })
+    lose = true
+    return
+}
+
+function exploreAround(elementNum) {
+
+
+    elementAround = getAround(setPoint(elementNum))
+    console.log(elementAround)
+
+    elementAround.forEach(function (item) {
+
+
+        if (safeArea.indexOf(item) !== -1 || dangerArea.indexOf(item) !== -1) {
+            return
+        }
+
+        if (config.bomb_map[item] === 0) {
+            areaSafe(areas[item])
+            exploreAround(item)
+        }
+        else {
+            areaDanger(areas[item])
+        }
+
+        return 0
+    })
+}
+
+function explore(element) {
+    element.point = setPoint(parseInt(element.getAttribute("area")))
+    // console.log(element.point)
+    switch (config.bomb_map[element.point.num]) {
+        // TAG 该点为 * 雷
+        case config.bomb_char: {
+            element.classList.add("boom")
+            explodeAll()
+            // bomb(element)
+            break
+        }
+        // TAG 该点为  0 安全
+        case 0: {
+            areaSafe(element)
+            exploreAround(element.point.num)
+            break
+        }
+        // TAG 该点为数字 危险
+        default: {
+            //
+            areaDanger(element)
+
+        }
+    }
+    console.log("explore")
+}
+
+function mark(element) {
+    console.log("mark")
+    console.log(element)
+    // // TAG 判断当前节点是否被标记
+    // if (element.classList.contains("marked")) {
+    //     // TAG 已经标记，取消标记
+    //     element.classList.remove("marked")
+    //     element.classList.add("doubt")
+
+    // }
+    // if(true) {
+    //     // TAG 未标记， 添加标记
+    //     element.classList.add("marked")
+    // }
+    if (element.classList.contains("marked")) {
+        element.classList.remove("marked")
+        element.classList.add("doubt")
+    } else
+        // TAG 判断当前节点是否被标记
+        if (element.classList.contains("doubt")) {
+            // TAG 已经标记，取消标记
+            element.classList.remove("doubt")
+
+            console.log("not doubt ")
+        }
+        else {
+            // TAG 未标记， 添加标记
+            element.classList.add("marked")
+            console.log("marked")
+        }
+    console.log("=======================================")
+}
+
+function doubt(element) {
+}
+// tempMousedownBottom(e)
 /**
  * 鼠标点击控制
  *
@@ -492,105 +669,161 @@ function freeMouse() {
 function mouseClick() {
     root.oncontextmenu = function () { return false }
     root.onmousedown = function (e) {
-        // console.clear()
-        // TEST
-        console.warn("onmousedown")
-        switch (e.button) {
-            case 0: { console.log("|=>", "左键按下"); break; }
-            case 1: { console.log("|=>", "中键按下"); break; }
-            case 2: { console.log("|=>", "右键按下"); break; }
+
+
+        mouse_down = {
+            down: true,
+            code: e.button,
+            time: new Date(),
+            click_times: clickTimes
         }
 
-        // 解决鼠标左右键同时处于按下状态
-        // 鼠标占用，点击无效
-        // TODO 当鼠标按键处于按下状态
-        //      其他键按下时，打印信息，不触发动作
-        // 占用标志 mouse_busy
-        if (mouse_busy) {
-            getMouseStatus("| |-", "|-status-busy")
-            console.log("|=>", "鼠标占用，点击无效");
+
+        // TODO 判断全局按键码
+        // TODO 若null 继续执行，
+        // WARN 否则忽略
+
+        console.log("before 判断全局按键码 ")
+        console.log(mouse_down)
+        console.log("mouseOn", mouseOn)
+        console.log("mouseCode", mouseCode)
+
+
+
+        // TAG 拦截执行
+        //
+        if (mouseOn === true && mouseCode !== null && mouseCode !== mouse_down.code) {
+            console.log("按键触发冲突")
             return
         }
 
-        // 按键占用
-        // TODO 如果没有占用正常触发点击事件
+        if (e.path[0].classList.contains("safe") || e.path[0].classList.contains("danger")) {
+            return console.log("已经探索过了，点击无效")
+        }
+        if(win || lose)
+        {
+            console.log("geme over")
+            return
+        }
 
-        // 获取DOM 节点
-        DOM = e.path[0]
-        // 定时任务
-        // NOTE: 适配手机不能右键
+
+
+        // TODO 同步当前按键码到全局
+        mouseOn = true
+        mouseCode = mouse_down.code
+
         setTimeout(() => {
-            if (mouse_down && !mouse_up) {
-                if (mouse_busy_button == 0) {
-                    // TAG 标记已经执行长按操作
-                    mouse_keeping = true
-                    return mouseLeftKeeping()
-                }
-                if (mouse_busy_button == 2) {
-                    mouse_keeping = true
-                    return mouseRightKeeping()
-                }
-            }
-            switch (e.button) {
-                case 0: { console.log("%c|=>", "color:pink", "触发左键长按，左键按下，执行结束"); break; }
-                case 1: { console.log("%c|=>", "color:pink", "触发中键长按，中键按下，执行结束"); break; }
-                case 2: { console.log("%c|=>", "color:pink", "触发右键长按，右键按下，执行结束"); break; }
-            }
+            time = new Date()
+            if (mouseOn === true && mouseCode !== null && mouseCode === mouse_down.code && mouseContains && time - mouse_down.time >= 1000) {
 
+                if (mouse_down.code === 0) {
+                    mark(e.path[0])
+                }
+
+                if (mouse_down.code === 2) {
+                    doubt(e.path[0])
+                }
+
+                console.log(time - mouse_down.time)
+                console.log("长按触发")
+            }
+            else {
+                if (!mouseContains) {
+                    console.log("不允许触发长按事件")
+                }
+                if (!mouseOn) {
+                    console.log("按键未触发")
+                }
+                if (mouseCode === null) {
+                    console.log("按键码空")
+                }
+                // DEBUG 解决接连出发按键（第一次不足定时条件），触发两次定时任务
+                if (time - mouse_down.time < 1000) {
+                    console.log("时间过短")
+                }
+            }
+        }, 1000);
+
+
+        // TAG 判断按键码
+        // TAG 左键执行安全判定
+        // TAG 右键执行标记判定
+        if (mouse_down.code == 0) {
+            console.log("lefton")
+            if (e.path[0].classList.contains("marked")) {
+                console.log("被标记 marked")
+                console.warn("点击失效")
+            }
+            if (e.path[0].classList.contains("doubt")) {
+                console.log("被标记 doubt ")
+                console.warn("点击失效")
+            }
+            explore(e.path[0])
+
+            console.log(e.path[0])
             return
-        }, 510);
-        switch (e.button) {
-            case 0: { console.log("%c|=>", "color:pink", "左键按下执行结束"); break; }
-            case 1: { console.log("%c|=>", "color:pink", "中键按下执行结束"); break; }
-            case 2: { console.log("%c|=>", "color:pink", "右键按下执行结束"); break; }
         }
-        return
+
+        if (mouse_down.code == 2) {
+            console.log("righton")
+
+            mark(e.path[0])
+            console.log(e.path[0])
+            return
+        }
     }
-    // tag
-    /**
-     * 鼠标松开执行函数
-     * 跳过条件
-     * 1. 按键长按方法被执行
-     * 2. 按键冲突
-     * 3.
-     * @param {*} e
-     */
     root.onmouseup = function (e) {
-        console.warn("onmouseup")
-        switch (e.button) {
-            case 0: { console.log("|=>", "左键松开"); break; }
-            case 1: { console.log("|=>", "中键松开"); break; }
-            case 2: { console.log("|=>", "右键松开"); break; }
-        }
-
-        // TAG 跳过条件1--鼠标长按已经执行
-        if (true) {
-            console.log("%c 鼠标长按已执行，此次mouseup跳过", "color:red")
-            // return
-        }
-
-        // TAG 跳过条件2 按键冲突
-        if (mouse_busy_button != e.button) {
-            console.log("%c 按键冲突，跳过执行", "color:red")
+        // TAG 标记鼠标释放
+        mouse_up = {
+            up: true,
+            // TAG 记录当前按键码
+            code: e.button,
+            // TAG 记录鼠标释放时间
+            time: new Date()
         }
 
 
+        // if (e.path[0].classList.contains("safe") || e.path[0].classList.contains("danger")) {
+        //     return console.log("已经探索过了，点击无效")
+        // }
+
+        // TODO 判断全局按键码
+        // TODO 若null 继续执行，
+        // WARN 否则忽略
 
 
-        return
+        // START 有效代码区
+        if (win || lose) {
+            console.log("geme over")
+            return
+        }
+        hasWin()
+
+        if (mouse_up.time - mouse_down.time < 1000) {
+            console.log("未触发长按")
+        }
+        else {
+            console.log("已经触发长按")
+        }
+
+
+        // console.log(e.composedPath()[0])
+
+        // END  有效代码区
+
+        console.log("mouseup")
+
+        // TAG 恢复全局按键状态
+        // TAG 恢复全局按键码
+
+        mouseOn = false
+        mouseCode = null
+        // TAG 点击次数自增
+        clickTimes += 1;
+
     }
-    // 对左键有效
-    root.onclick = function (e) {
-        console.warn("onclick")
-        switch (e.button) {
-            case 0: { console.log("|=>", "左键点击"); break; }
-            case 1: { console.log("|=>", "中键点击"); break; }
-            case 2: { console.log("|=>", "右键点击"); break; }
-        }
-
-    }
-    return
 }
+
 /**
  * 生成DOM 节点
  * 前置条件，定义root节点，生成的节点都挂载于root 节点
@@ -628,7 +861,6 @@ function createMapElement() {
             j++
             // console.log(cul)
         }
-
         console.log(cul)
         rli.appendChild(cul)
         root.appendChild(rli)

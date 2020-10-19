@@ -84,7 +84,18 @@ li {
     box-shadow: 0 0 3px red;
     background-size: 70%;
 }
-
+.columns>.doubt::before {
+    position: absolute;
+    height: 34px;
+    width: 34px;
+    top: 1px;
+    left: 1px;
+    z-index: 10;
+    content: "";
+    background: url(./img/doubt.png) red no-repeat center;
+    box-shadow: 0 0 3px red;
+    background-size: 70%;
+}
 .columns>.safe::before {
     display: none;
 }
