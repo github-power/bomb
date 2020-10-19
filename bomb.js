@@ -8,7 +8,40 @@ var dangerArea = []
 var scannedArea = []
 var win = false
 var lose = false
+var mouse_down_time = new Date();
+var mouse_up_time = new Date();
+var mouse_duration
+var mouse_up = false
+var mouse_down = false
+var config = {
+    bomb_area_width: 10, // 雷区宽度
+    bomb_area_height: 10, // 雷区高度
+    bomb_area: 50,
+    bomb_num: 10,  // 雷数目
+    bomb_arr: [], // 雷位置
+    bomb_map: [],// 雷区地图
+    bomb_char: '*',
+    start_time: null,
+    end_time: null,
+    result: null,
+}
+function getMouseStatus(prefix, data) {
 
+    console.log(data)
+
+
+    // console.log(prefix, "mouse_duration  : ", mouse_duration)
+    if (mouse_up_time - mouse_down_time <= 0) {
+        console.log(prefix, "mouse_down_time  : ", mouse_down_time)
+    }
+    else {
+        console.log(prefix, "mouse_up_time  : ", mouse_up_time)
+        console.log(prefix, "点击时间", mouse_up_time - mouse_down_time, 'ms')
+    }
+
+    console.log(prefix, "mouse_up  : ", mouse_up)
+    console.log(prefix, "mouse_down  : ", mouse_down)
+}
 function init() {
     areas = null
     markedArea = []
@@ -27,9 +60,11 @@ function init() {
         bomb_arr: [], // 雷位置
         bomb_map: [],// 雷区地图
         bomb_char: '*',
+        start_time: null,
+        end_time: null,
+        result: null,
     }
 }
-
 /**
  * 获取DOM元素集合存储到变量areas
  */
@@ -79,9 +114,7 @@ var config = {
     bomb_map: [],// 雷区地图
     bomb_char: '*',
 }
-
 /* 生成雷区地图相关***********************************************************/
-
 /**
  * 生成目标个有效雷区位置
  * 数据来自全局变量config
@@ -134,20 +167,14 @@ function setMap() {
  */
 //  x width
 //  y height
-
-
 /*
 up   x > 0
-
 down x < height -1
 left up x > 0 y > 0
 right up x > 0 y < wdhth - 1
-
 left y > 0
 right y < width -1
-
  */
-
 function getAround(point) {
     var aroundNum = []
     // top
@@ -158,7 +185,7 @@ function getAround(point) {
             aroundNum.push(point.num - config.bomb_area_width - 1)
         }
         // right
-        if (point.y < config.bomb_area_width -1) {
+        if (point.y < config.bomb_area_width - 1) {
             aroundNum.push(point.num - config.bomb_area_width + 1)
         }
     }
@@ -169,7 +196,7 @@ function getAround(point) {
         if (point.y > 0) {
             aroundNum.push(point.num + config.bomb_area_width - 1)
         }// right
-        if (point.y < config.bomb_area_width -1) {
+        if (point.y < config.bomb_area_width - 1) {
             aroundNum.push(point.num + config.bomb_area_width + 1)
         }
     }
@@ -178,7 +205,7 @@ function getAround(point) {
         aroundNum.push(point.num - 1)
     }
     // right
-    if (point.y < config.bomb_area_width -1 ) {
+    if (point.y < config.bomb_area_width - 1) {
         aroundNum.push(point.num + 1)
     }
     return aroundNum.sort();
@@ -247,7 +274,6 @@ function areaDanger(e) {
     e.classList.add("danger")
     dangerArea.push(parseInt(e.getAttribute("area")))
 }
-
 /**
  * 周围无雷 安全
  * @param {*} e
@@ -257,14 +283,12 @@ function areaSafe(e) {
     e.classList.add("safe")
     safeArea.push(parseInt(e.getAttribute("area")))
 }
-
 /**
  * 实现点击到安全区，自动向周围探索
  * @param {*} element 被点击的DOM节点 - li
  */
 function aroundStatus(element) {
     var point = setPoint(parseInt(element.getAttribute('area')))
-
     around = getAround(point)
     around.forEach(function (item) {
         //没有被探索过的
@@ -300,25 +324,99 @@ function isWin() {
         youwin()
     }
 }
+function remove(DOM) {
+    var area = {}
+    area.num = parseInt(DOM.getAttribute("area"))
+    area.status = {}
+    area.config = {}
+    area.status.safe = DOM.classList.contains("safe")
+    area.status.marked = DOM.classList.contains("marked")
+    area.status.danger = DOM.classList.contains("danger")
+    area.config.status = config.bomb_map[area.num]
+    console.warn(area.config.status)
+    area.status.hidden = area.status.mark || area.status.safe || area.status.danger
+    // console.log('--clickAction--left')
+    if (safeArea.indexOf(area.num) == -1 && dangerArea.indexOf(area.num) == -1 && markedArea.indexOf(area.num) == -1) {
+        switch (area.config.status) {
+            case 0: {
+                // 修改区块属性
+                areaSafe(DOM)
+                aroundStatus(DOM)
+                if (scannedArea.indexOf(area.num) == -1) {
+                    scannedArea.push(area.num)
+                }
+                break;
+            }
+            case config.bomb_char: {
+                boom(DOM)
+                setTimeout(function () {
+                    // 这里就是处理的事件
+                    if (lose) {
+                        youLose()
+                    }
+                }, 1000);
+                break
+            }
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8: {
+                console.warn("danger")
+                areaDanger(DOM)
+                break
+            } default: {
+                console.log(area)
+            }
+        }
+    }
+    else {
+        console.warn("左键点击失效")
+    }
+}
+function sign(DOM) {
+    var area = {}
+    area.num = parseInt(DOM.getAttribute("area"))
+    area.status = {}
+    area.config = {}
+    area.status.safe = DOM.classList.contains("safe")
+    area.status.marked = DOM.classList.contains("marked")
+    area.status.danger = DOM.classList.contains("danger")
+    area.config.status = config.bomb_map[area.num]
+    console.warn(area.config.status)
+    area.status.hidden = area.status.mark || area.status.safe || area.status.danger
+    // area.around = getAround(DOM)
+    // console.log('--clickAction--right')
+    if (!area.status.safe && !area.status.danger) {
+        if (area.status.marked) {
+            unMark(DOM)
+            console.warn('unmark', DOM)
+        }
+        else {
+            mark(DOM)
+            console.warn('marked', DOM)
+        }
+    }
+    else {
+        console.warn("右键点击失效")
+    }
+}
 function clickAction(BTN, DOM) {
     // console.clear()
     var mouseLeftCode = 0;
     var mouseCenterCode = 1
     var mouseRightCode = 2
     var area = {}
-    if (win) {
-        // console.clear()
-        console.log("win")
-        return
-    }
-    if (lose) {
-        // console.clear()
-        console.log("lose")
+    if (mouse_duration > 500) {
+        sign(DOM)
+        mouse_duration = 0
         return
     }
     area.num = parseInt(DOM.getAttribute("area"))
     area.status = {}
-
     area.config = {}
     area.status.safe = DOM.classList.contains("safe")
     area.status.marked = DOM.classList.contains("marked")
@@ -327,73 +425,23 @@ function clickAction(BTN, DOM) {
     console.warn(area.config.status)
     area.status.hidden = area.status.mark || area.status.safe || area.status.danger
     area.around = getAround(DOM)
+    mouse_duration = mouse_up_time - mouse_down_time
+    time = new Date()
+    if (time - mouse_down_time > 500) {
+        sign(DOM)
+        return 0
+    }
+    // console("sfsdf")
     if (BTN == mouseLeftCode) {
         // console.clear()
-        console.log('--clickAction--left')
-        if (safeArea.indexOf(area.num) == -1 && dangerArea.indexOf(area.num) == -1 && markedArea.indexOf(area.num) == -1) {
-            switch (area.config.status) {
-                case 0: {
-                    // 修改区块属性
-                    areaSafe(DOM)
-                    aroundStatus(DOM)
-                    if (scannedArea.indexOf(area.num) == -1) {
-                        scannedArea.push(area.num)
-                    }
-                    break;
-                }
-                case config.bomb_char: {
-                    boom(DOM)
-
-
-                    setTimeout(function () {
-                        // 这里就是处理的事件
-                        if (lose) {
-                            youLose()
-                        }
-
-                    }, 1000);
-                    break
-                }
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 8: {
-                    console.warn("danger")
-                    areaDanger(DOM)
-                    break
-                } default: {
-                    console.log(area)
-                }
-            }
-        }
-        else {
-            console.warn("左键点击失效")
-        }
+        remove(DOM)
     }
     if (BTN == mouseRightCode) {
-        // console.clear()
-        console.log('--clickAction--right')
-        if (!area.status.safe && !area.status.danger) {
-            if (area.status.marked) {
-                unMark(DOM)
-                console.warn('unmark', DOM)
-            }
-            else {
-                mark(DOM)
-                console.warn('marked', DOM)
-            }
-        }
-        else {
-            console.warn("右键点击失效")
-        }
+        sign(DOM)
     }
     if (BTN == mouseCenterCode) {
         // console.clear()
-        console.log('--clickAction--center')
+        // console.log('--clickAction--center')
     }
     console.log("area      ", area)
     // console.warn(safeArea)
@@ -405,22 +453,99 @@ function clickAction(BTN, DOM) {
 function mouseClick() {
     root.oncontextmenu = function () { return false }
     root.onmousedown = function (e) {
-        console.error(e)
-    }
-    root.onmouseup = function (e) {
-        var area = e.composedPath()[0].getAttribute("area")
-        var point = setPoint(area)
-        var around = getAround(point)
-        clickAction(e.button, e.composedPath()[0])
-        setTimeout(function () {
-            isWin()
-            if (lose) {
-                // console.clear()
-                console.log("youlose")
-                return
+
+        // 标记鼠标按下
+        mouse_down = true
+        // 记录鼠标按下时间
+        mouse_down_time = new Date()
+        // 获取DOM 节点
+        DOM = e.path[0]
+        console.clear()
+        // 判断时候胜利或失败
+        // if (win) {
+        //     // console.clear()
+        //     console.log("win")
+        //     return
+        // }
+        // if (lose) {
+        //     // console.clear()
+        //     console.log("lose")
+        //     return
+        // }
+        console.warn("onmousedown")
+        // console.log()
+        getMouseStatus("| |-", "|-status")
+
+        // 定时任务
+        // TODO适配手机不能右键
+        setTimeout(() => {
+
+            // if (mouse_down) {
+            //     console.clear()
+            //     // console.log()
+            //     time = new Date
+            //     console.log(mouse_down_time, time)
+            //     console.warn("settimeout")
+            //     console.log(e)
+            //     clickAction(e.button, e.path[0])
+            // }
+            // else {
+            //     console.clear()
+            //     console.warn("settimeout--晚了")
+            // }
+            if (mouse_down && !mouse_up) {
+                mouse_duration = new Date() - mouse_down_time;
+                clickAction(e.button, DOM)
+                console.log("|-setTimeout", new Date - mouse_down_time)
             }
-        }, 2000);
-        console.log(point, around)
+
+        }, 510);
+        // console.clear()
+        // console.log(e.path[0])
+        // 鼠标按下后 鼠标状态为按下状态
+        mouse_up = false
+    }
+
+    root.onmouseup = function (e) {
+        // 记录鼠标松开
+        mouse_up = true
+        // 记录鼠标松开时间
+        mouse_up_time = new Date()
+
+        console.warn("onmouseup")
+        getMouseStatus("| |-", "|-status")
+
+
+
+        // var area = e.composedPath()[0].getAttribute("area")
+        // var point = setPoint(area)
+        // var around = getAround(point)
+
+
+
+        if (win) {
+            // console.clear()
+            console.log("win")
+            return
+        }
+        if (lose) {
+            // console.clear()
+            console.log("lose")
+            return
+        }
+
+        // 执行 点击操作
+        console.log("|", "clickAction")
+        clickAction(e.button, e.composedPath()[0])
+
+        // console.log(point, around)
+        // 改变鼠标状态， 鼠标状态
+
+        mouse_down = false
+    }
+    root.onclick = function (e) {
+        console.warn("onclick")
+        getMouseStatus("| |-", "|-status")
     }
 }
 /**
@@ -432,11 +557,9 @@ function mouseClick() {
 function createMapElement() {
     // 地图结构
     // ul#root.rows>li.row>ul.columns>li.column
-
     // 雷区的宽高
     var width = config.bomb_area_width;
     var height = config.bomb_area_height;
-
     var i = 0;
     var rli;
     var cul;
@@ -480,7 +603,6 @@ window.onload = function () {
     // 点击事件
     mouseClick()
 }
-
 function restart() {
     console.log('------------------', root)
     config = {
@@ -495,14 +617,11 @@ function restart() {
     var i = 0
     console.log(root.length)
     root.innerHTML = ""
-
-
     areas = null
     markedArea = []
     safeArea = []
     dangerArea = []
     scannedArea = []
-
     lose = false
     win = false
     setMap()
@@ -513,7 +632,6 @@ function restart() {
 function testCookie() {
     console.log()
 }
-
 function startMe() {
     init()
     config.bomb_num = parseInt(document.getElementsByName("bomb_num")[0].value)
@@ -526,7 +644,6 @@ function startMe() {
     createMapElement()
     console.log(config)
 }
-
 function getElementTop(el) {
     var actualTop = el.offsetTop
     var current = el.offsetParent
@@ -536,4 +653,3 @@ function getElementTop(el) {
     }
     return actualTop
 }
-
