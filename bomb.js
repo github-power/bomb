@@ -45,12 +45,27 @@ var config = {
  * 配置初始化
  */
 function init() {
+    title = document.getElementsByClassName("title")[0]
+    title.innerText = "简单扫雷"
+    root = document.getElementById("root");
+    root.innerHTML = []
     areas = null
-    areas = null
+    markedArea = []
     safeArea = []
     dangerArea = []
+    mouseDruationTime = 500
+    mouseOn = null;
+    mouseCode = null
+    mouse_down = {}
+    mouse_up = {}
     win = false
     lose = false
+    mouse_down_time = new Date();
+    mouse_up_time = new Date();
+    mouse_duration = null
+    mouse_keeping = false
+    mouse_busy = false
+    mouse_busy_button = null
     config = {
         bomb_area_width: 10, // 雷区宽度
         bomb_area_height: 10, // 雷区高度
@@ -255,6 +270,10 @@ function explodeAll() {
 function explore(element) {
     element.point = setPoint(parseInt(element.getAttribute("area")))
     // console.log(element.point)
+    if (element.classList.contains("marked") || element.classList.contains("doubt")) {
+        console.log("已标记，点击无效")
+        return
+    }
     switch (config.bomb_map[element.point.num]) {
         // NOTE: 该点为 * 雷
         case config.bomb_char: {
@@ -282,6 +301,10 @@ function exploreAround(elementNum) {
     elementAround = getAround(setPoint(elementNum))
     // console.log(elementAround)
     elementAround.forEach(function (item) {
+        if (areas[item].classList.contains("marked") || areas[item].classList.contains("doubt")) {
+            console.log("已标记，无法探索")
+            return
+        }
         if (safeArea.indexOf(item) !== -1 || dangerArea.indexOf(item) !== -1) {
             return
         }
@@ -452,8 +475,7 @@ function mouseClick() {
             // NOTE: 记录鼠标释放时间
             time: new Date()
         }
-        if(mouse_up.code !== mouseCode)
-        {
+        if (mouse_up.code !== mouseCode) {
             console.log("松开冲突")
             return
         }
@@ -592,11 +614,12 @@ function createMapElement() {
  * 页面加载完后执行
  */
 window.onload = function () {
-    root = document.getElementById("root");
+
+    init()
     // 生成地图
     setMap()
     // console.clear()
-    title = document.getElementsByClassName("title")[0]
+
     // 生成DOM
     createMapElement()
     // 点击事件
@@ -610,31 +633,9 @@ window.onload = function () {
 function restart() {
     // NOTE: 清空控制台
     console.clear()
+    init()
     console.log("重新开始")
-    title.innerText = "简单扫雷"
-    // NOTE: 重置配置
-    config = {
-        bomb_area_width: 10, // 雷区宽度
-        bomb_area_height: 10, // 雷区高度
-        bomb_area: 50,
-        bomb_num: 10, // 雷数目
-        bomb_arr: [], // 雷位置
-        bomb_map: [], // 雷区地图
-        bomb_char: '*',
-    }
-    // NOTE: 清空根元素
-    root.innerHTML = ""
-    // NOTE: 清空子元素
-    areas = null
-    // NOTE: 清空安全数组
-    safeArea = []
-    // NOTE: 清空危险数组
-    dangerArea = []
-    // NOTE: 重置成功失败信息
-    lose = false
-    win = false
     setMap()
-    // 生成DOM
     createMapElement()
     return
 }
@@ -643,15 +644,12 @@ function restart() {
  */
 function startMe() {
     init()
-    title.innerText = "简单扫雷"
     config.bomb_num = parseInt(document.getElementsByName("bomb_num")[0].value)
     config.bomb_area_width = parseInt(document.getElementsByName("bomb_area_width")[0].value)
     config.bomb_area_height = parseInt(document.getElementsByName("bomb_area_height")[0].value)
     console.clear()
-    root.innerHTML = []
-    // setBomb()
+
     setMap()
     createMapElement()
-    console.log(config)
     return
 }
