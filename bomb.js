@@ -1,30 +1,33 @@
 // 地图跟节点
 var root = document.getElementsByTagName("body")[0]
+var title
 // 雷区节点
 var areas = null
 var markedArea = []
 var safeArea = []
 var dangerArea = []
-// TAG 标记按键触发
+// NOTE: 触发长按的时间节点 ms
+var mouseDruationTime = 500
+// NOTE: 标记按键触发
 var mouseOn = null;
-// TAG 记录当前按键码
+// NOTE: 记录当前按键码
 var mouseCode = null
-// TAG 长按是否可触发
+// NOTE: 长按是否可触发
 var mouse_down = {}
 var mouse_up = {}
-// TAG 用于游戏状态判断
+// NOTE: 用于游戏状态判断
 var win = false
 var lose = false
-// TAG 用于长时间点击
+// NOTE: 用于长时间点击
 var mouse_down_time = new Date();
 var mouse_up_time = new Date();
 var mouse_duration = null
-// TAG 是否执行触发长按动作
+// NOTE: 是否执行触发长按动作
 var mouse_keeping = false
-// TAG 用于解决鼠标按键冲突
+// NOTE: 用于解决鼠标按键冲突
 var mouse_busy = false
 var mouse_busy_button = null
-// TAG 扫雷配置
+// NOTE: 扫雷配置
 var config = {
     bomb_area_width: 10, // 雷区宽度
     bomb_area_height: 10, // 雷区高度
@@ -157,12 +160,12 @@ function setMap() {
  */
 // x width
 // y height
-// TAG up x > 0
-// TAG down x < height - 1
-// TAG left up x > 0 y > 0
-// TAG right up x > 0 y < wdhth - 1
-// TAGleft y > 0
-// TAG right y < width - 1
+// NOTE: up x > 0
+// NOTE: down x < height - 1
+// NOTE: left up x > 0 y > 0
+// NOTE: right up x > 0 y < wdhth - 1
+// NOTE:left y > 0
+// NOTE: right y < width - 1
 function getAround(point) {
     var aroundNum = []
     // top
@@ -207,7 +210,7 @@ function getAround(point) {
 function areaDanger(element) {
     element.innerText = config.bomb_map[parseInt(element.getAttribute("area"))]
     element.classList.add("danger")
-    // TAG 添加该点到危险数组
+    // NOTE: 添加该点到危险数组
     dangerArea.push(parseInt(element.getAttribute("area")))
     return
 }
@@ -218,12 +221,13 @@ function areaDanger(element) {
 function areaSafe(element) {
     element.innerText = ''
     element.classList.add("safe")
-    // TAG 天加该点到 安全数组
+    // NOTE: 天加该点到 安全数组
     safeArea.push(parseInt(element.getAttribute("area")))
     return
 }
 
 function winOrLose() {
+    console.log(safeArea.length + dangerArea.length + config.bomb_arr.length, config.bomb_area_width * config.bomb_area_height)
     if (safeArea.length + dangerArea.length + config.bomb_arr.length === config.bomb_area_width * config.bomb_area_height) {
         win = true
         console.log("%cWin", "color:pink")
@@ -231,7 +235,7 @@ function winOrLose() {
     if (lose) {
         console.error("lose")
     }
-    return win
+    return win || lose
 }
 
 function explode(element) {
@@ -252,20 +256,20 @@ function explore(element) {
     element.point = setPoint(parseInt(element.getAttribute("area")))
     // console.log(element.point)
     switch (config.bomb_map[element.point.num]) {
-        // TAG 该点为 * 雷
+        // NOTE: 该点为 * 雷
         case config.bomb_char: {
             element.classList.add("boom")
             explodeAll()
             // bomb(element)
             break
         }
-        // TAG 该点为 0 安全
+        // NOTE: 该点为 0 安全
         case 0: {
             areaSafe(element)
             exploreAround(element.point.num)
             break
         }
-        // TAG 该点为数字 危险
+        // NOTE: 该点为数字 危险
         default: {
             //
             areaDanger(element)
@@ -294,33 +298,33 @@ function exploreAround(elementNum) {
 function mark(element) {
     console.log("mark")
     // console.log(element)
-    // TAG 逻辑 "marked" "doubt" "" 三者循环
+    // NOTE: 逻辑 "marked" "doubt" "" 三者循环
     // 确定 不确定 未知
-    // TAG 如果当前标记为 marked 则修改为doubt
+    // NOTE: 如果当前标记为 marked 则修改为doubt
     if (element.classList.contains("marked")) {
         element.classList.remove("marked")
         element.classList.add("doubt")
         console.log(" marked ==> doubt")
     } else
-        // TAG 判断当前节点是否被标记doubt
+        // NOTE: 判断当前节点是否被标记doubt
         if (element.classList.contains("doubt")) {
-            // TAG 已经标记，取消标记
+            // NOTE: 已经标记，取消标记
             element.classList.remove("doubt")
             console.log(" doubt ==> ")
         }
         else {
-            // TAG 未标记， 添加标记 marked
+            // NOTE: 未标记， 添加标记 marked
             element.classList.add("marked")
             console.log(" ==> marked")
         }
 }
 
 function mouseClick() {
-    // TAG 屏蔽右键菜单
+    // NOTE: 屏蔽右键菜单
     root.oncontextmenu = function () {
         return false
     }
-    // TAG 按键按下时触发
+    // NOTE: 按键按下时触发
     root.onmousedown = function (e) {
         switch (e.button) {
             case 0: {
@@ -340,17 +344,29 @@ function mouseClick() {
             down: true,
             code: e.button,
             time: new Date(),
-            // click_times: clickTimes
         }
-        // TODO 判断全局按键码
-        // TODO 若null 继续执行，
-        // WARN 否则忽略
+        // if (!mouseCode && !mouseOn) {
+        //     mouseCode = e.button
+        //     mouseOn = true
+        //     console.log("按下")
+        // }
+        // mouseClick = true
+        // NOTE: 判断全局按键码
+        // NOTE: 若null 继续执行，
+        // NOTE: 否则忽略
         // console.log("before 判断全局按键码 ")
         // console.log(mouse_down)
         // console.log("mouseOn", mouseOn)
         // console.log("mouseCode", mouseCode)
-        // TAG 拦截执行
+        // NOTE: 拦截执行
         //
+        if (win) {
+            console.log("%cyou win", "color:red;fontsize:24px")
+            return
+        } if (lose) {
+            console.log("%cyou lose", "color:red;fontsize:24px")
+            return
+        }
         if (mouseOn === true && mouseCode !== null && mouseCode !== mouse_down.code) {
             console.log("按键触发冲突")
             return
@@ -362,12 +378,12 @@ function mouseClick() {
             console.log("geme over")
             return
         }
-        // TODO 同步当前按键码到全局
+        // NOTE: 同步当前按键码到全局
         mouseOn = true
         mouseCode = mouse_down.code
         setTimeout(() => {
             time = new Date()
-            if (mouseOn === true && mouseCode !== null && mouseCode === mouse_down.code && time - mouse_down.time >= 1000) {
+            if (mouseOn === true && mouseCode !== null && mouseCode === mouse_down.code && time - mouse_down.time >= mouseDruationTime) {
                 if (mouse_down.code === 0) {
                     console.log("|-mouseLeftKeeping", "左键持续按压触发")
                     mark(e.path[0])
@@ -387,15 +403,15 @@ function mouseClick() {
                 if (mouseCode === null) {
                     console.log("按键码空")
                 }
-                // DEBUG 解决接连出发按键（第一次不足定时条件），触发两次定时任务
-                if (time - mouse_down.time < 1000) {
+                // NOTE:解决接连出发按键（第一次不足定时条件），触发两次定时任务
+                if (time - mouse_down.time < mouseDruationTime) {
                     console.log("时间过短")
                 }
             }
-        }, 1000);
-        // TAG 判断按键码
-        // TAG 左键执行安全判定
-        // TAG 右键执行标记判定
+        }, mouseDruationTime);
+        // NOTE: 判断按键码
+        // NOTE: 左键执行安全判定
+        // NOTE: 右键执行标记判定
 
         switch (e.button) {
             case 0: {
@@ -412,7 +428,7 @@ function mouseClick() {
             }
         }
     }
-    // TAG 按键释放时触发
+    // NOTE: 按键释放时触发
     root.onmouseup = function (e) {
         switch (e.button) {
             case 0: {
@@ -428,17 +444,31 @@ function mouseClick() {
                 break;
             }
         }
-        // TAG 标记鼠标释放
+        // NOTE: 标记鼠标释放
         mouse_up = {
             up: true,
-            // TAG 记录当前按键码
+            // NOTE: 记录当前按键码
             code: e.button,
-            // TAG 记录鼠标释放时间
+            // NOTE: 记录鼠标释放时间
             time: new Date()
         }
-
-        if(mouse_up.time - mouse_down.time  < 1000)
+        if(mouse_up.code !== mouseCode)
         {
+            console.log("松开冲突")
+            return
+        }
+        // NOTE: 动作拦截
+        if (win) {
+            console.log("%cyou win", "color:red;fontsize:24px")
+            title.innerText = "好棒！！"
+            return
+        } if (lose) {
+            console.log("%cyou lose", "color:red;fontsize:24px")
+            title.innerText = "继续努力！！"
+            return
+        }
+
+        if (mouse_up.time - mouse_down.time < mouseDruationTime) {
             if (mouse_down.code == 0) {
                 console.log("lefton")
                 if (e.path[0].classList.contains("marked")) {
@@ -451,37 +481,49 @@ function mouseClick() {
                 }
                 explore(e.path[0])
                 console.log(e.path[0])
-                return
+                // return
             }
             if (mouse_down.code == 2) {
                 console.log("righton")
                 mark(e.path[0])
                 console.log(e.path[0])
-                return
+                // return
             }
         }
 
         // if (e.path[0].classList.contains("safe") || e.path[0].classList.contains("danger")) {
         // return console.log("已经探索过了，点击无效")
         // }
-        // TODO 判断全局按键码
-        // TODO 若null 继续执行，
-        // WARN 否则忽略
+        // NOTE: 判断全局按键码
+        // NOTE: 若null 继续执行，
+        // NOTE: 否则忽略
         // START 有效代码区
-        if (win || lose) {
+        winOrLose()
+        // if (win || lose) {
+
+        //     return
+        // }
+        if (win) {
             console.log("geme over")
+            console.log("%cyou win", "color:red;fontsize:24px")
+            title.innerText = "好棒！！"
+            return
+        } if (lose) {
+            console.log("geme over")
+            console.log("%cyou lose", "color:red;fontsize:24px")
+            title.innerText = "继续努力！！"
             return
         }
-        //TAG 判断是否胜利或失败
-        winOrLose()
-        // TAG 暂时没有作用
+        //NOTE: 判断是否胜利或失败
+
+        // NOTE: 暂时没有作用
         // END 有效代码区
         console.log("mouseup")
-        // TAG 恢复全局按键状态
+        // NOTE: 恢复全局按键状态
         mouseOn = false
-        // TAG 恢复全局按键码
+        // NOTE: 恢复全局按键码
         mouseCode = null
-        // TAG 点击次数自增
+        // NOTE: 点击次数自增
         // clickTimes += 1;
         switch (e.button) {
             case 0: {
@@ -554,6 +596,7 @@ window.onload = function () {
     // 生成地图
     setMap()
     // console.clear()
+    title = document.getElementsByClassName("title")[0]
     // 生成DOM
     createMapElement()
     // 点击事件
@@ -565,10 +608,11 @@ window.onload = function () {
  * 重新开始
  */
 function restart() {
-    // TAG 清空控制台
+    // NOTE: 清空控制台
     console.clear()
     console.log("重新开始")
-    // TAG 重置配置
+    title.innerText = "简单扫雷"
+    // NOTE: 重置配置
     config = {
         bomb_area_width: 10, // 雷区宽度
         bomb_area_height: 10, // 雷区高度
@@ -578,15 +622,15 @@ function restart() {
         bomb_map: [], // 雷区地图
         bomb_char: '*',
     }
-    // TAG 清空根元素
+    // NOTE: 清空根元素
     root.innerHTML = ""
-    // TAG 清空子元素
+    // NOTE: 清空子元素
     areas = null
-    // TAG 清空安全数组
+    // NOTE: 清空安全数组
     safeArea = []
-    // TAG 清空危险数组
+    // NOTE: 清空危险数组
     dangerArea = []
-    // TAG 重置成功失败信息
+    // NOTE: 重置成功失败信息
     lose = false
     win = false
     setMap()
@@ -599,6 +643,7 @@ function restart() {
  */
 function startMe() {
     init()
+    title.innerText = "简单扫雷"
     config.bomb_num = parseInt(document.getElementsByName("bomb_num")[0].value)
     config.bomb_area_width = parseInt(document.getElementsByName("bomb_area_width")[0].value)
     config.bomb_area_height = parseInt(document.getElementsByName("bomb_area_height")[0].value)
